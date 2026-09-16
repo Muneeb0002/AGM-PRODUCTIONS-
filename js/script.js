@@ -16,15 +16,47 @@ document.querySelectorAll(".nav a").forEach(link => {
   link.addEventListener("click", () => nav.classList.remove("open"));
 });
 
-// Change this email address to your real business email.
-const BUSINESS_EMAIL = "YOUR_EMAIL@example.com";
+/* ---------- EmailJS ---------- */
+const EMAILJS_PUBLIC_KEY = "TQCOASXKPnbZoJhAq";
+const SERVICE_ID = "service_ej0u1rv";
+const TEMPLATE_ID = "template_z46vir9";
 
-document.getElementById("contactForm").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const data = new FormData(event.currentTarget);
-  const subject = encodeURIComponent("New AGM Productions Inquiry");
-  const body = encodeURIComponent(
-    `Name: ${data.get("name")}\nEmail: ${data.get("email")}\nPhone: ${data.get("phone")}\n\nMessage:\n${data.get("message")}`
-  );
-  window.location.href = `mailto:${BUSINESS_EMAIL}?subject=${subject}&body=${body}`;
-});
+const form = document.getElementById("contactForm");
+const submitBtn = document.getElementById("submitBtn");
+const status = document.getElementById("formStatus");
+
+if (typeof emailjs === "undefined") {
+  console.error("EmailJS SDK load nahi hui. index.html mein CDN script check karein.");
+} else {
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    // form.name form ka apna property hai, isliye elements[] use kar rahe hain
+    const templateParams = {
+      name: form.elements["name"].value.trim(),
+      email: form.elements["email"].value.trim(),
+      phone: form.elements["phone"].value.trim(),
+      message: form.elements["message"].value.trim(),
+    };
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Sending...";
+    status.textContent = "";
+
+    emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
+      .then(() => {
+        status.textContent = "Thanks! Your message has been sent.";
+        form.reset();
+      })
+      .catch((error) => {
+        console.error("EmailJS error:", error);
+        status.textContent = "Sorry, message send nahi hua. Please try again.";
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Send Inquiry";
+      });
+  });
+}
